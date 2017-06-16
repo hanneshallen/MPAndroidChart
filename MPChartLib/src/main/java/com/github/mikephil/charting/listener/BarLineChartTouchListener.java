@@ -373,7 +373,8 @@ public class BarLineChartTouchListener extends ChartTouchListener<BarLineChartBa
                             l.onChartScale(event, scaleX, scaleY);
                     }
 
-                } else if (mTouchMode == X_ZOOM && mChart.isScaleXEnabled()) {
+                } else {
+                   if (mChart.isScaleXEnabled()) {
 
                     mLastGesture = ChartGesture.X_ZOOM;
 
@@ -394,27 +395,49 @@ public class BarLineChartTouchListener extends ChartTouchListener<BarLineChartBa
                             l.onChartScale(event, scaleX, 1f);
                     }
 
-                } else if (mTouchMode == Y_ZOOM && mChart.isScaleYEnabled()) {
+                    if (mChart.isScaleYEnabled()) {
 
-                    mLastGesture = ChartGesture.Y_ZOOM;
+                        mLastGesture = ChartGesture.Y_ZOOM;
 
-                    float yDist = getYDist(event);
-                    float scaleY = yDist / mSavedYDist; // y-axis scale
+                        float yDist = getYDist(event);
+                        float scaleY = yDist / mSavedYDist; // y-axis scale
 
-                    boolean isZoomingOut = (scaleY < 1);
-                    boolean canZoomMoreY = isZoomingOut ?
-                            h.canZoomOutMoreY() :
-                            h.canZoomInMoreY();
+                        boolean isZoomingOut = (scaleY < 1);
+                        boolean canZoomMoreY = isZoomingOut ?
+                                h.canZoomOutMoreY() :
+                                h.canZoomInMoreY();
 
-                    if (canZoomMoreY) {
+                        if (canZoomMoreY) {
 
-                        mMatrix.set(mSavedMatrix);
-                        mMatrix.postScale(1f, scaleY, t.x, t.y);
+                            mMatrix.set(mSavedMatrix);
+                            mMatrix.postScale(1f, scaleY, t.x, t.y);
 
-                        if (l != null)
-                            l.onChartScale(event, 1f, scaleY);
+                            if (l != null)
+                                l.onChartScale(event, 1f, scaleY);
+                        }
                     }
                 }
+                // else if (mTouchMode == Y_ZOOM && mChart.isScaleYEnabled()) {
+                //
+                //     mLastGesture = ChartGesture.Y_ZOOM;
+                //
+                //     float yDist = getYDist(event);
+                //     float scaleY = yDist / mSavedYDist; // y-axis scale
+                //
+                //     boolean isZoomingOut = (scaleY < 1);
+                //     boolean canZoomMoreY = isZoomingOut ?
+                //             h.canZoomOutMoreY() :
+                //             h.canZoomInMoreY();
+                //
+                //     if (canZoomMoreY) {
+                //
+                //         mMatrix.set(mSavedMatrix);
+                //         mMatrix.postScale(1f, scaleY, t.x, t.y);
+                //
+                //         if (l != null)
+                //             l.onChartScale(event, 1f, scaleY);
+                //     }
+                // }
 
                 MPPointF.recycleInstance(t);
             }
