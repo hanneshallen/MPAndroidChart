@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.graphics.Matrix;
 import android.graphics.PointF;
 import android.util.Log;
-import android.util.TimeFormatException;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
@@ -39,12 +38,6 @@ public class BarLineChartTouchListener extends ChartTouchListener<BarLineChartBa
      * matrix for saving the original matrix state
      */
     private Matrix mSavedMatrix = new Matrix();
-
-    /**
-     * floats for saving the original scale state when zoom starts
-     */
-    private float mSavedYScale = 1f;
-    private float mSavedXScale = 1f;
 
     /**
      * point where the touch action started
@@ -288,8 +281,6 @@ public class BarLineChartTouchListener extends ChartTouchListener<BarLineChartBa
     private void saveTouchStart(MotionEvent event) {
 
         mSavedMatrix.set(mMatrix);
-        mSavedYScale = mChart.getScaleY();
-        mSavedXScale = mChart.getScaleX();
         mTouchStartPoint.x = event.getX();
         mTouchStartPoint.y = event.getY();
 
@@ -342,6 +333,8 @@ public class BarLineChartTouchListener extends ChartTouchListener<BarLineChartBa
 
         if (event.getPointerCount() >= 2) { // two finger zoom
 
+            OnChartGestureListener l = mChart.getOnChartGestureListener();
+
             // get the distance between the pointers of the touch event
             float totalDist = spacing(event);
 
@@ -372,7 +365,12 @@ public class BarLineChartTouchListener extends ChartTouchListener<BarLineChartBa
                     float scaleY = (mChart.isScaleYEnabled()) ? scale : 1f;
 
                     if (canZoomMoreY || canZoomMoreX) {
-                        performScaleWithLimit(event, scaleX, scaleY, t.x, t.y);
+
+                        mMatrix.set(mSavedMatrix);
+                        mMatrix.postScale(scaleX, scaleY, t.x, t.y);
+
+                        if (l != null)
+                            l.onChartScale(event, scaleX, scaleY);
                     }
 
                 } else if (mTouchMode == X_ZOOM && mChart.isScaleXEnabled()) {
@@ -388,8 +386,12 @@ public class BarLineChartTouchListener extends ChartTouchListener<BarLineChartBa
                             h.canZoomInMoreX();
 
                     if (canZoomMoreX) {
-                        performScaleWithLimit(event, scaleX, 1f, t.x, t.y);
 
+                        mMatrix.set(mSavedMatrix);
+                        mMatrix.postScale(scaleX, 1f, t.x, t.y);
+
+                        if (l != null)
+                            l.onChartScale(event, scaleX, 1f);
                     }
 
                 } else if (mTouchMode == Y_ZOOM && mChart.isScaleYEnabled()) {
@@ -399,62 +401,24 @@ public class BarLineChartTouchListener extends ChartTouchListener<BarLineChartBa
                     float yDist = getYDist(event);
                     float scaleY = yDist / mSavedYDist; // y-axis scale
 
-
                     boolean isZoomingOut = (scaleY < 1);
                     boolean canZoomMoreY = isZoomingOut ?
                             h.canZoomOutMoreY() :
                             h.canZoomInMoreY();
 
                     if (canZoomMoreY) {
-                        performScaleWithLimit(event, 1f, scaleY, t.x, t.y);
+
+                        mMatrix.set(mSavedMatrix);
+                        mMatrix.postScale(1f, scaleY, t.x, t.y);
+
+                        if (l != null)
+                            l.onChartScale(event, 1f, scaleY);
                     }
                 }
 
                 MPPointF.recycleInstance(t);
             }
         }
-    }
-
-    /**
-     * Performs the scaling for pinch and axis zoom. Limits the scale to the viewports min and max scales.
-     *
-     * @param event
-     * @param sx
-     * @param sy
-     * @param px
-     * @param py
-     */
-    private void performScaleWithLimit(MotionEvent event, float sx, float sy, float px, float py) {
-
-        ViewPortHandler h = mChart.getViewPortHandler();
-
-        float newScaleX = sx * mSavedXScale;
-        float maxScaleX = h.getMaxScaleX();
-        float minScaleX = h.getMinScaleX();
-        if (newScaleX < minScaleX) {
-            sx = sx * minScaleX / newScaleX;
-        }
-        else if (newScaleX > maxScaleX) {
-            sx = sx * maxScaleX / newScaleX;
-        }
-
-        float newScaleY = sy * mSavedYScale;
-        float maxScaleY = h.getMaxScaleY();
-        float minScaleY = h.getMinScaleY();
-        if (newScaleY < minScaleY) {
-            sy = sy * minScaleY / newScaleY;
-        }
-        else if (newScaleY > maxScaleY) {
-            sy = sy * maxScaleY / newScaleY;
-        }
-
-
-        mMatrix.set(mSavedMatrix);
-        mMatrix.postScale(sx, sy, px, py);
-
-        OnChartGestureListener l = mChart.getOnChartGestureListener();
-        if (l != null)
-            l.onChartScale(event, sx, sy);
     }
 
     /**
