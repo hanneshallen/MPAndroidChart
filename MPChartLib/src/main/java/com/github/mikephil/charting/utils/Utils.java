@@ -632,7 +632,7 @@ public abstract class Utils {
 
         paint.setTextAlign(originalTextAlign);
     }
-}
+
 
     public static void drawXAxisValue(Canvas c, String text, float x, float y,
                                       Paint paint,
