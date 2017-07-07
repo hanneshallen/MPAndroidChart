@@ -576,7 +576,7 @@ public abstract class Utils {
 
         // To have a consistent point of reference, we always draw left-aligned
         Paint.Align originalTextAlign = paint.getTextAlign();
-        paint.setTextAlign(Paint.Align.LEFT);
+        paint.setTextAlign(Paint.Align.CENTER);
 
         if (angleDegrees != 0.f) {
 
@@ -607,7 +607,6 @@ public abstract class Utils {
             {
                 c.drawText(line, drawOffsetX, drawOffsetY, paint);
                 drawOffsetY = paint.descent() - paint.ascent();
-
             }
 
             c.restore();
@@ -620,12 +619,12 @@ public abstract class Utils {
             }
 
             drawOffsetX = x;
-            drawOffsetY = y;
+            drawOffsetY = y + lineHeight;
 
             for (String line: text.split("\n"))
             {
                 c.drawText(line, drawOffsetX, drawOffsetY, paint);
-                drawOffsetY = paint.descent() - paint.ascent();
+                drawOffsetY += lineHeight;
             }
 
         }
