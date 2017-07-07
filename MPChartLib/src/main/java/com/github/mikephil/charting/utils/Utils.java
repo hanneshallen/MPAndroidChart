@@ -619,7 +619,7 @@ public abstract class Utils {
             }
 
             drawOffsetX = x;
-            drawOffsetY = y + lineHeight;
+            drawOffsetY = y;
 
             for (String line: text.split("\n"))
             {
